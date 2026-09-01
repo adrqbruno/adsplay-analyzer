@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Baloo 2', system-ui, sans-serif;
+  --font-body: 'Nunito Sans', system-ui, sans-serif;
+
+  --color-violet: #7b2fbf;
+  --color-violet-deep: #5b1e93;
+  --color-violet-ink: #3e1568;
+  --color-violet-bright: #9b3fe0;
+  --color-lilac: #f4edfb;
+  --color-lilac-line: #e4d3f5;
+  --color-ink: #2a2233;
+  --color-body: #5c5566;
+  --color-mute: #8b8394;
+  --color-paper: #ffffff;
+  --color-paper-2: #fbf8fe;
+  --color-line: #ede6f4;
+  --color-ok: #5bb98b;
+  --color-ok-bg: #eaf6ef;
+  --color-warn: #e8763c;
+  --color-warn-bg: #fbede4;
+  --color-danger: #d64545;
+  --color-danger-bg: #fbeaea;
+
+  --radius-adsplay: 20px;
+}
+
+@layer base {
+  body {
+    @apply bg-paper font-body text-body antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display font-semibold text-ink;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-violet);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
