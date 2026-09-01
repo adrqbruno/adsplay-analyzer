@@ -1,7 +1,9 @@
 # Adsplay Analyzer
 
-Diagnosticador de campanhas Google Ads — local-first, multi-cliente, sem backend.
-Todo o processamento do CSV acontece no navegador; nada é enviado a um servidor.
+Diagnosticador de campanhas Google Ads — local-first, multi-cliente.
+Todo o processamento do CSV acontece no navegador; nada é enviado a um servidor
+por padrão. Há um sync opcional com Supabase (time compartilhado) — ver
+"Sync com a nuvem" abaixo.
 
 ## Como rodar
 
@@ -20,6 +22,7 @@ npm run lint      # lint (oxlint)
 - PapaParse para parsing de CSV
 - Recharts para gráficos
 - jsPDF + jspdf-autotable para o export de diagnóstico em PDF (lazy-loaded, só baixa no clique de "Exportar PDF")
+- Supabase (opcional) para sync com a nuvem — auth por magic link + Postgres
 - Tailwind CSS v4 com o design system Adsplay (tokens em `src/index.css`)
 - Vitest para testes do motor de análise
 
@@ -52,6 +55,26 @@ painel "Padrões em termos de pesquisa" na tela de resultados); meta do cliente
 (CPA/ROAS combinados, opcional, em "Meta deste cliente" na tela de resultados)
 — compara o real contra o valor combinado com o cliente, diferente da média
 interna usada nas outras regras (`src/engine/rules/goalGap.ts`).
+
+## Sync com a nuvem (Supabase, opcional)
+
+O app continua local-first por padrão. Sem as env vars abaixo, a seção de
+sync na aba Backup simplesmente não aparece.
+
+1. Crie um projeto em supabase.com/dashboard e rode a migration em
+   `supabase/migrations/20260901000000_cloud_sync.sql` no SQL Editor
+   (cria `clients`/`uploads`/`analyses` espelhando o Dexie, com RLS liberado
+   para qualquer usuário autenticado do projeto — pensado para um time
+   pequeno e confiável, sem isolamento por usuário).
+2. Copie `.env.example` para `.env.local` e preencha com o Project URL e a
+   anon/publishable key (Settings → API — seguras de expor no client, o
+   acesso real é controlado pelo RLS).
+3. No Vercel, adicione as mesmas duas variáveis em Settings → Environment
+   Variables (Production) para o deploy também ter sync habilitado.
+
+Login é por magic link (e-mail, sem senha). O sync é sempre manual e
+explícito — botões "Sincronizar" / "Baixar da nuvem" na aba Backup, nunca
+automático em background.
 
 ## Como adicionar uma nova regra de diagnóstico ao motor
 

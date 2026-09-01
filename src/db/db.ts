@@ -3,9 +3,9 @@ import type { Analysis } from '../types/analysis'
 import type { Client } from '../types/client'
 import type { Upload } from '../types/upload'
 
-// BACKEND-PLUG: quando existir backend, esta classe pode virar um cache local
-// sincronizado (ex.: via Dexie Cloud ou uma camada de sync própria), mantendo
-// as mesmas tabelas espelhando o servidor. Auth/sync entrariam aqui.
+// Continua sendo a fonte de verdade local (local-first). O sync opcional com
+// o Supabase (db/supabase.ts, db/cloudSync.ts) espelha estas tabelas na
+// nuvem só quando o usuário aciona explicitamente — nunca automático.
 export class AdsplayDB extends Dexie {
   clients!: Table<Client, string>
   uploads!: Table<Upload, string>

@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
     "dexie": "^4.0.10",
     "dexie-react-hooks": "^4.4.0",
     "jspdf": "^4.2.1",

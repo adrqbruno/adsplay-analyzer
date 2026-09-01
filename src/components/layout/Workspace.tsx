@@ -9,6 +9,7 @@ import type { Client, ClientSettings } from '../../types/client'
 import type { ColumnMap, ColumnRole } from '../../types/columnMap'
 import type { Upload } from '../../types/upload'
 import { BackupPanel } from '../backup/BackupPanel'
+import { CloudSyncPanel } from '../backup/CloudSyncPanel'
 import { ComparePanel } from '../compare/ComparePanel'
 import { HistoryList } from '../history/HistoryList'
 import { ColumnMappingTable } from '../mapping/ColumnMappingTable'
@@ -210,7 +211,12 @@ export function Workspace({ client, onUpdateClientSettings }: WorkspaceProps) {
         </div>
       </div>
 
-      {tab === 'backup' && <BackupPanel />}
+      {tab === 'backup' && (
+        <div className="flex flex-col gap-5">
+          <BackupPanel />
+          <CloudSyncPanel client={client} />
+        </div>
+      )}
 
       {tab === 'compare' && <ComparePanel />}
 
