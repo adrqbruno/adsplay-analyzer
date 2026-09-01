@@ -1,4 +1,4 @@
-export type FindingBucket = 'cpa' | 'waste' | 'volume' | 'groups'
+export type FindingBucket = 'cpa' | 'waste' | 'volume' | 'groups' | 'goalGap'
 
 export type Severity = 'high' | 'med' | 'low'
 

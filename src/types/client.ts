@@ -1,6 +1,10 @@
 export interface ClientSettings {
   cpaMultiplier?: number
   wasteCutoff?: number
+  /** Meta de CPA (R$) combinada com o cliente — comparação absoluta, não relativa à média interna. */
+  targetCpa?: number
+  /** Meta de ROAS (×) combinada com o cliente. */
+  targetRoas?: number
 }
 
 export interface Client {

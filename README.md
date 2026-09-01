@@ -48,7 +48,10 @@ período a período (aba "Comparar períodos": sobe dois exports e mostra o
 delta de custo/conversões/CPA por campanha, com tendência melhorou/piorou/
 estável); export do diagnóstico em PDF com a marca Adsplay (`src/lib/pdf.ts`);
 padrões recorrentes em termos de pesquisa por n-grama (`src/engine/ngrams.ts`,
-painel "Padrões em termos de pesquisa" na tela de resultados).
+painel "Padrões em termos de pesquisa" na tela de resultados); meta do cliente
+(CPA/ROAS combinados, opcional, em "Meta deste cliente" na tela de resultados)
+— compara o real contra o valor combinado com o cliente, diferente da média
+interna usada nas outras regras (`src/engine/rules/goalGap.ts`).
 
 ## Como adicionar uma nova regra de diagnóstico ao motor
 

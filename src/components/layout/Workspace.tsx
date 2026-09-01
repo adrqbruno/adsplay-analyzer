@@ -15,6 +15,7 @@ import { ColumnMappingTable } from '../mapping/ColumnMappingTable'
 import { NgramPanel } from '../ngrams/NgramPanel'
 import { Controls } from '../results/Controls'
 import { FindingsList } from '../results/FindingsList'
+import { GoalSettings } from '../results/GoalSettings'
 import { KpiStrip } from '../results/KpiStrip'
 import { Dropzone } from '../upload/Dropzone'
 
@@ -45,6 +46,7 @@ export function Workspace({ client, onUpdateClientSettings }: WorkspaceProps) {
     cpaMultiplier: client.settings?.cpaMultiplier ?? DEFAULT_ENGINE_PARAMS.cpaMultiplier,
     wasteCutoff: client.settings?.wasteCutoff ?? DEFAULT_ENGINE_PARAMS.wasteCutoff,
   }
+  const goals = { targetCpa: client.settings?.targetCpa, targetRoas: client.settings?.targetRoas }
 
   const [tab, setTab] = useState<Tab>('new')
   const [step, setStep] = useState<Step>('upload')
@@ -61,8 +63,9 @@ export function Workspace({ client, onUpdateClientSettings }: WorkspaceProps) {
 
   const liveResult = useMemo(() => {
     if (!active) return null
-    return analyze(active.rawRows, active.columnMap, params)
-  }, [active, params])
+    return analyze(active.rawRows, active.columnMap, params, goals)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `goals` é derivado de client.settings a cada render; comparar por referência recalcularia sempre
+  }, [active, params, client.settings?.targetCpa, client.settings?.targetRoas])
 
   function resetToUpload() {
     setParsed(null)
@@ -117,7 +120,7 @@ export function Workspace({ client, onUpdateClientSettings }: WorkspaceProps) {
     }
     await db.uploads.add(upload)
 
-    const { termRows: _termRows, ...resultFields } = analyze(parsed.rawRows, columnMap, defaultParams)
+    const { termRows: _termRows, ...resultFields } = analyze(parsed.rawRows, columnMap, defaultParams, goals)
     const analysisRecord: Analysis = {
       id: generateId(),
       clientId,
@@ -165,9 +168,13 @@ export function Workspace({ client, onUpdateClientSettings }: WorkspaceProps) {
   }
 
   async function saveAsClientDefault() {
-    await onUpdateClientSettings(clientId, { cpaMultiplier: params.cpaMultiplier, wasteCutoff: params.wasteCutoff })
+    await onUpdateClientSettings(clientId, { ...client.settings, cpaMultiplier: params.cpaMultiplier, wasteCutoff: params.wasteCutoff })
     setSettingsMessage('Definido como padrão deste cliente.')
     setTimeout(() => setSettingsMessage(null), 3000)
+  }
+
+  async function saveGoals(newGoals: Pick<ClientSettings, 'targetCpa' | 'targetRoas'>) {
+    await onUpdateClientSettings(clientId, { ...client.settings, ...newGoals })
   }
 
   async function exportPdf() {
@@ -254,6 +261,10 @@ export function Workspace({ client, onUpdateClientSettings }: WorkspaceProps) {
 
           {step === 'results' && active && liveResult && (
             <div>
+              <div className="mb-5">
+                <GoalSettings client={client} onSave={saveGoals} />
+              </div>
+
               <div className="rounded-[26px] border-2 border-lilac-line bg-paper p-7">
                 <KpiStrip metrics={liveResult.accountMetrics} campaignCount={liveResult.campaignCount} />
                 <div className="mt-5.5">

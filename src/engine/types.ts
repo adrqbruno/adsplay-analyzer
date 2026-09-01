@@ -42,3 +42,13 @@ export const DEFAULT_ENGINE_PARAMS: EngineParams = {
   cpaMultiplier: 1.3,
   wasteCutoff: 100,
 }
+
+/**
+ * Metas absolutas combinadas com o cliente — diferente de EngineParams, que
+ * ajusta a sensibilidade das comparações relativas internas da conta. Ambas
+ * opcionais: sem meta definida, a regra de gap não gera achado.
+ */
+export interface GoalTargets {
+  targetCpa?: number
+  targetRoas?: number
+}

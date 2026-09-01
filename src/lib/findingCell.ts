@@ -11,7 +11,8 @@ export function formatFindingCellText(key: string, value: unknown): string {
   if (key === 'bottleneck') return BOTTLENECK_LABEL[String(value)] ?? String(value)
 
   if (typeof value === 'number') {
-    if (/lost|rank|budget|share/i.test(key)) return formatPercent(value)
+    if (/roas/i.test(key)) return `${formatNumber(value, { maximumFractionDigits: 2 })}×`
+    if (/lost|rank|budget|share|gap/i.test(key)) return formatPercent(value)
     if (/cpa|cost|excess|benchmark/i.test(key)) return formatMoney(value)
     return formatNumber(value)
   }
