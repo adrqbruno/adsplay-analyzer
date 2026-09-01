@@ -5,18 +5,21 @@ import type { EngineParams } from '../../engine/types'
 import { useAnalysisHistory } from '../../hooks/useAnalysisHistory'
 import { generateId } from '../../lib/id'
 import type { Analysis } from '../../types/analysis'
+import type { Client, ClientSettings } from '../../types/client'
 import type { ColumnMap, ColumnRole } from '../../types/columnMap'
 import type { Upload } from '../../types/upload'
 import { BackupPanel } from '../backup/BackupPanel'
+import { ComparePanel } from '../compare/ComparePanel'
 import { HistoryList } from '../history/HistoryList'
 import { ColumnMappingTable } from '../mapping/ColumnMappingTable'
+import { NgramPanel } from '../ngrams/NgramPanel'
 import { Controls } from '../results/Controls'
 import { FindingsList } from '../results/FindingsList'
 import { KpiStrip } from '../results/KpiStrip'
 import { Dropzone } from '../upload/Dropzone'
 
 type Step = 'upload' | 'mapping' | 'results'
-type Tab = 'new' | 'history' | 'backup'
+type Tab = 'new' | 'history' | 'compare' | 'backup'
 
 interface ParsedFile {
   fileName: string
@@ -32,11 +35,17 @@ interface ActiveAnalysis {
 }
 
 interface WorkspaceProps {
-  clientId: string
-  clientName: string
+  client: Client
+  onUpdateClientSettings: (id: string, settings: ClientSettings) => Promise<void>
 }
 
-export function Workspace({ clientId, clientName }: WorkspaceProps) {
+export function Workspace({ client, onUpdateClientSettings }: WorkspaceProps) {
+  const clientId = client.id
+  const defaultParams: EngineParams = {
+    cpaMultiplier: client.settings?.cpaMultiplier ?? DEFAULT_ENGINE_PARAMS.cpaMultiplier,
+    wasteCutoff: client.settings?.wasteCutoff ?? DEFAULT_ENGINE_PARAMS.wasteCutoff,
+  }
+
   const [tab, setTab] = useState<Tab>('new')
   const [step, setStep] = useState<Step>('upload')
   const [parsed, setParsed] = useState<ParsedFile | null>(null)
@@ -44,8 +53,9 @@ export function Workspace({ clientId, clientName }: WorkspaceProps) {
   const [autoDetected, setAutoDetected] = useState<ColumnMap>({})
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [active, setActive] = useState<ActiveAnalysis | null>(null)
-  const [params, setParams] = useState<EngineParams>(DEFAULT_ENGINE_PARAMS)
+  const [params, setParams] = useState<EngineParams>(defaultParams)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [settingsMessage, setSettingsMessage] = useState<string | null>(null)
 
   const { analyses } = useAnalysisHistory(clientId)
 
@@ -107,19 +117,19 @@ export function Workspace({ clientId, clientName }: WorkspaceProps) {
     }
     await db.uploads.add(upload)
 
-    const result = analyze(parsed.rawRows, columnMap, DEFAULT_ENGINE_PARAMS)
+    const { termRows: _termRows, ...resultFields } = analyze(parsed.rawRows, columnMap, defaultParams)
     const analysisRecord: Analysis = {
       id: generateId(),
       clientId,
       uploadId,
       fileName: parsed.fileName,
       createdAt: Date.now(),
-      params: DEFAULT_ENGINE_PARAMS,
-      ...result,
+      params: defaultParams,
+      ...resultFields,
     }
     await db.analyses.add(analysisRecord)
 
-    setParams(DEFAULT_ENGINE_PARAMS)
+    setParams(defaultParams)
     setActive({ uploadId, fileName: parsed.fileName, rawRows: parsed.rawRows, columnMap })
     setStep('results')
     setSaveMessage(null)
@@ -140,6 +150,7 @@ export function Workspace({ clientId, clientName }: WorkspaceProps) {
 
   async function saveCurrentSnapshot() {
     if (!active || !liveResult) return
+    const { termRows: _termRows, ...resultFields } = liveResult
     const analysisRecord: Analysis = {
       id: generateId(),
       clientId,
@@ -147,20 +158,33 @@ export function Workspace({ clientId, clientName }: WorkspaceProps) {
       fileName: active.fileName,
       createdAt: Date.now(),
       params,
-      ...liveResult,
+      ...resultFields,
     }
     await db.analyses.add(analysisRecord)
     setSaveMessage('Salvo no histórico.')
   }
 
+  async function saveAsClientDefault() {
+    await onUpdateClientSettings(clientId, { cpaMultiplier: params.cpaMultiplier, wasteCutoff: params.wasteCutoff })
+    setSettingsMessage('Definido como padrão deste cliente.')
+    setTimeout(() => setSettingsMessage(null), 3000)
+  }
+
+  async function exportPdf() {
+    if (!active || !liveResult) return
+    const { downloadDiagnosisPdf } = await import('../../lib/pdf')
+    downloadDiagnosisPdf({ clientName: client.name, fileName: active.fileName, createdAt: Date.now(), params, result: liveResult })
+  }
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl">{clientName}</h2>
-        <div className="flex gap-2">
+        <h2 className="text-2xl">{client.name}</h2>
+        <div className="flex flex-wrap gap-2">
           {(
             [
               ['new', 'Novo diagnóstico'],
+              ['compare', 'Comparar períodos'],
               ['history', 'Histórico'],
               ['backup', 'Backup'],
             ] as const
@@ -180,6 +204,8 @@ export function Workspace({ clientId, clientName }: WorkspaceProps) {
       </div>
 
       {tab === 'backup' && <BackupPanel />}
+
+      {tab === 'compare' && <ComparePanel />}
 
       {tab === 'history' && <HistoryList analyses={analyses} onOpen={(a) => void openHistoryAnalysis(a)} />}
 
@@ -237,15 +263,26 @@ export function Workspace({ clientId, clientName }: WorkspaceProps) {
                   <button type="button" onClick={() => void saveCurrentSnapshot()} className="rounded-full bg-violet px-5 py-2 font-display text-sm font-semibold text-white hover:bg-violet-deep">
                     Salvar esta análise
                   </button>
+                  <button type="button" onClick={() => void exportPdf()} className="rounded-full border-2 border-lilac-line px-5 py-2 font-display text-sm font-semibold text-violet hover:border-violet hover:bg-lilac">
+                    Exportar PDF
+                  </button>
+                  <button type="button" onClick={() => void saveAsClientDefault()} className="rounded-full border-2 border-lilac-line px-5 py-2 font-display text-sm font-semibold text-violet hover:border-violet hover:bg-lilac">
+                    Salvar como padrão deste cliente
+                  </button>
                   <button type="button" onClick={resetToUpload} className="rounded-full border-2 border-lilac-line px-5 py-2 font-display text-sm font-semibold text-violet hover:border-violet hover:bg-lilac">
                     Novo diagnóstico
                   </button>
                   {saveMessage && <span className="text-sm text-ok">{saveMessage}</span>}
+                  {settingsMessage && <span className="text-sm text-ok">{settingsMessage}</span>}
                 </div>
               </div>
 
               <h3 className="my-4 text-[22px]">Achados priorizados por impacto</h3>
               <FindingsList findings={liveResult.findings} />
+
+              <div className="mt-6">
+                <NgramPanel termRows={liveResult.termRows} />
+              </div>
             </div>
           )}
         </div>

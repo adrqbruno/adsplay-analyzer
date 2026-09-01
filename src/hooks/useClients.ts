@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { generateId } from '../lib/id'
-import type { Client } from '../types/client'
+import type { Client, ClientSettings } from '../types/client'
 
 export function useClients() {
   const clients = useLiveQuery(() => db.clients.orderBy('name').toArray(), [], undefined)
@@ -17,6 +17,10 @@ export function useClients() {
     await db.clients.update(id, { name: name.trim(), updatedAt: Date.now() })
   }
 
+  async function updateClientSettings(id: string, settings: ClientSettings): Promise<void> {
+    await db.clients.update(id, { settings, updatedAt: Date.now() })
+  }
+
   async function deleteClient(id: string): Promise<void> {
     await db.transaction('rw', db.clients, db.uploads, db.analyses, async () => {
       await db.analyses.where('clientId').equals(id).delete()
@@ -30,6 +34,7 @@ export function useClients() {
     loading: clients === undefined,
     createClient,
     renameClient,
+    updateClientSettings,
     deleteClient,
   }
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { formatMoney, formatNumber, formatPercent } from '../../lib/format'
+import { formatMoney } from '../../lib/format'
+import { formatFindingCellText } from '../../lib/findingCell'
 import type { Finding } from '../../types/finding'
 
 interface FindingCardProps {
@@ -41,13 +42,7 @@ function renderCell(key: string, value: unknown) {
     )
   }
 
-  if (typeof value === 'number') {
-    if (/lost|rank|budget|share/i.test(key)) return formatPercent(value)
-    if (/cpa|cost|excess|benchmark/i.test(key)) return formatMoney(value)
-    return formatNumber(value)
-  }
-
-  return String(value ?? '—')
+  return formatFindingCellText(key, value)
 }
 
 export function FindingCard({ finding, defaultOpen = false }: FindingCardProps) {

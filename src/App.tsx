@@ -7,7 +7,7 @@ import { useClients } from './hooks/useClients'
 const SELECTED_CLIENT_KEY = 'adsplay:selectedClientId'
 
 function App() {
-  const { clients, loading, createClient, renameClient, deleteClient } = useClients()
+  const { clients, loading, createClient, renameClient, updateClientSettings, deleteClient } = useClients()
   const [selectedClientId, setSelectedClientId] = useState<string | null>(() => localStorage.getItem(SELECTED_CLIENT_KEY))
 
   // Se o cliente selecionado foi excluído (ou nunca existiu), cai de volta pro primeiro disponível.
@@ -66,7 +66,7 @@ function App() {
 
       <main className="mx-auto w-full max-w-[1160px] flex-1 px-7 py-8">
         {loading ? null : selectedClient ? (
-          <Workspace clientId={selectedClient.id} clientName={selectedClient.name} />
+          <Workspace client={selectedClient} onUpdateClientSettings={updateClientSettings} />
         ) : (
           <div className="rounded-[26px] border-2 border-lilac-line bg-paper p-9 text-center">
             <div className="mb-2 font-display text-xl font-semibold text-ink">Comece criando um cliente</div>

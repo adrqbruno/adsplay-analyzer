@@ -6,13 +6,15 @@ import { cpaRule } from './rules/cpa'
 import { groupsRule } from './rules/groups'
 import { volumeRule } from './rules/volume'
 import { wasteRule, wasteSummary } from './rules/waste'
-import type { EngineParams, Metrics } from './types'
+import type { AdsRow, EngineParams, Metrics } from './types'
 
 export interface AnalyzeResult {
   accountMetrics: Metrics
   campaignCount: number
   findings: Finding[]
   wasteInfo: { count: number; total: number }
+  /** Linhas de termo de pesquisa (ou todas as linhas, sem coluna Tipo) — para análises auxiliares como n-gramas. */
+  termRows: AdsRow[]
 }
 
 /**
@@ -40,5 +42,6 @@ export function analyze(rawRows: Record<string, string>[], columnMap: ColumnMap,
     campaignCount: new Set(keywords.map((r) => r.campaign)).size,
     findings,
     wasteInfo: wasteSummary(terms, params),
+    termRows: terms,
   }
 }

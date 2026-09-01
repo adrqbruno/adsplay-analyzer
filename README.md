@@ -19,6 +19,7 @@ npm run lint      # lint (oxlint)
 - Dexie (IndexedDB) para persistência local
 - PapaParse para parsing de CSV
 - Recharts para gráficos
+- jsPDF + jspdf-autotable para o export de diagnóstico em PDF (lazy-loaded, só baixa no clique de "Exportar PDF")
 - Tailwind CSS v4 com o design system Adsplay (tokens em `src/index.css`)
 - Vitest para testes do motor de análise
 
@@ -29,13 +30,25 @@ src/
   engine/        motor de diagnóstico — módulos puros, sem dependência de UI
   types/         tipos de domínio (Client, Upload, ColumnMap, Finding, Analysis)
   db/            Dexie: schema, instância do banco, export/import de backup
-  components/    UI (layout, clientes, upload, mapeamento, resultados, histórico)
+  components/    UI (layout, clientes, upload, mapeamento, resultados, histórico,
+                  comparação de períodos, n-gramas)
   hooks/         hooks React que ligam UI ao db/engine
-  lib/           formatação e utilidades pequenas
+  lib/           formatação, export de PDF e utilidades pequenas
 ```
 
-`db/` e a maior parte de `components/` ainda serão adicionados nos próximos
-passos (fluxo de UI, depois persistência multi-cliente e backup).
+## Funcionalidades
+
+**Fase 1** — upload → mapeamento → diagnóstico (CPA, desperdício, volume,
+grupos), multi-cliente com histórico salvo via Dexie, backup local export/import
+em JSON.
+
+**Fase 2** — thresholds customizáveis por cliente ("Salvar como padrão deste
+cliente" na tela de resultados, lido de `Client.settings`); comparação
+período a período (aba "Comparar períodos": sobe dois exports e mostra o
+delta de custo/conversões/CPA por campanha, com tendência melhorou/piorou/
+estável); export do diagnóstico em PDF com a marca Adsplay (`src/lib/pdf.ts`);
+padrões recorrentes em termos de pesquisa por n-grama (`src/engine/ngrams.ts`,
+painel "Padrões em termos de pesquisa" na tela de resultados).
 
 ## Como adicionar uma nova regra de diagnóstico ao motor
 
